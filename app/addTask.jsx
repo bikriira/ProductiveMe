@@ -1,23 +1,49 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import FormField from "../components/FormField";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+// import { useNavigation } from "@react-navigation/native";
 
 import Button from "../components/Button";
+import { TasksContext } from "../contexts/TasksContext";
+import { updateStorage } from "../constants";
+import { useRoute } from "@react-navigation/native";
 
-const AddTask = ({ navigation }) => {
+const AddTask = () => {
+  const { tasks, setTasks } = useContext(TasksContext);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showFromTimePicker, setShowFromTimePicker] = useState(false);
+  const [showToTimePicker, setShowToTimePicker] = useState(false);
+
+  const route = useRoute();
+  const passedTask = route.params?.task;
+  const [isEditMode, setIsEditMode] = useState(false);
+
   const [form, setForm] = useState({
-    title: "",
-    description: "",
+    id: 0,
+    title: '',
+    description: '',
     date: new Date(),
     fromTime: new Date(),
     toTime: new Date(),
   });
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showFromTimePicker, setShowFromTimePicker] = useState(false);
-  const [showToTimePicker, setShowToTimePicker] = useState(false);
+  useEffect(() => {
+    if (passedTask) {
+      console.log("data passed = true", passedTask);
+      setIsEditMode(true);
+      setForm({
+        id: passedTask.id,
+        title: passedTask.title,
+        description: passedTask.description,
+        date: new Date(passedTask.date),
+        fromTime: new Date(passedTask.fromTime),
+        toTime: new Date(passedTask.toTime),
+      });
+    }
+  }, [passedTask]);
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -40,13 +66,52 @@ const AddTask = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = () => {
-    // Handle submit logic here
-    console.log('Form submitted:', form);
+  const getRandomId = (min, max) => {
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return randomNumber.toString();
   };
 
-  const handleCancel = () => {
-    navigation.goBack();
+  const isIdExists = (id) => {
+    return tasks.some(task => task.id === id);
+  };
+
+  const handleSubmit = () => {
+    let newTaskId;
+    if (isEditMode) {
+      newTaskId = passedTask.id;
+    } else {
+      do {
+        newTaskId = getRandomId(1, 180);
+      } while (isIdExists(newTaskId));
+    }
+
+    const newTask = {
+      ...form,
+      id: newTaskId,
+      date: form.date.toISOString(),
+      fromTime: form.fromTime.toISOString(),
+      toTime: form.toTime.toISOString(),
+    };
+
+    setTasks((currentTasks) => {
+      let updatedTasks;
+      if (isEditMode) {
+        updatedTasks = currentTasks.map(task =>
+          task.id === passedTask.id ? newTask : task
+        );
+      } else {
+        updatedTasks = [...currentTasks, newTask];
+      }
+      updateStorage(updatedTasks);
+      return updatedTasks;
+    });
+
+    console.log('Form submitted:', newTask);
+    resetFormAndGoBack();
+  };
+
+  const resetFormAndGoBack = () => {
+    router.back();
   };
 
   return (
@@ -133,10 +198,11 @@ const AddTask = ({ navigation }) => {
         </View>
       </ScrollView>
       <View className="flex-row  w-full justify-between p-5 bg-gray-200 absolute bottom-0">
-        <Button text="Cancel" color="danger" handlePress={() => router.back()} />
-        <Button text="Save" />
-      </View></>
+        <Button text="Cancel" color="danger" handlePress={resetFormAndGoBack} />
+        <Button text={isEditMode ? "Update" : "Save"} handlePress={handleSubmit} />
+      </View>
+    </>
   );
-}; 7
+};
 
 export default AddTask;

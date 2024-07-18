@@ -1,4 +1,4 @@
 import icons from "./icons";
-import getTasks from "./getTasks";
+import getTasks, { updateStorage } from "./manageTasks";
 
-export { icons, getTasks };
+export { icons, getTasks, updateStorage };

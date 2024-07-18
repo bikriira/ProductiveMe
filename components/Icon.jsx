@@ -1,17 +1,22 @@
-import { Image, TouchableOpacity } from "react-native";
+import { Image, TouchableOpacity, View } from "react-native";
 import { icons } from "../constants";
 
-const Icon = ({ name, moreStyles, invertColor }) => {
-    return (
-        // <TouchableOpacity activeOpacity={0.4}>
+const Icon = ({ name, moreStyles, invertColor, handlePress }) => {
+
+  return (
+    <View>
+      <TouchableOpacity activeOpacity={0.4} onPress={handlePress} disabled={!handlePress}>
+
         <Image
-            source={icons[name]}
-            className={`w-[24px] h-[24px] ${moreStyles}`}
-            style={{ tintColor: invertColor }}
-            resizeMode="contain"
+          source={icons[name]}
+          className={`w-[24px] h-[24px] ${moreStyles}`}
+          style={{ tintColor: invertColor }}
+          resizeMode="contain"
+
         />
-        /* </TouchableOpacity> */
-    );
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 export default Icon;

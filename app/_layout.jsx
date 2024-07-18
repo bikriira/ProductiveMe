@@ -1,22 +1,17 @@
 import { View, Text } from "react-native";
 import { SplashScreen, Tabs } from "expo-router";
 import { useFonts } from "expo-font";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientButton from "../components/GradientButton";
 
 import Icon from "../components/Icon";
 import CustomHeader from '../components/CustomHeader';
-import { getTasks } from "../constants/";
+import { TasksProvider } from "../contexts/TasksContext";
 
 SplashScreen.preventAutoHideAsync();
 
 function TabIcon({ iconName, focused, name }) {
-  useEffect(() => {
-    if (getTasks() == undefined) throw "Failed to load data from storage"
-    if (getTasks() != undefined) SplashScreen.hideAsync()
-  }, []);
-
   return (
     <View
       className={`items-center justify-center gap-2 ${focused && "relative mb-11"
@@ -57,7 +52,7 @@ const tabBarBackground = () => {
   );
 };
 export default function RootLayout() {
-  const [fontsLoaded, error] = useFonts({
+  const [fontsLoaded, FontError] = useFonts({
     "Poppins-Black": require("../assets/fonts/Poppins-Black.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
     "Poppins-ExtraBold": require("../assets/fonts/Poppins-ExtraBold.ttf"),
@@ -68,101 +63,102 @@ export default function RootLayout() {
     "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
-
   useEffect(() => {
-    if (error) throw error;
+    if (FontError) throw FontError;
     if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded, error]);
-  if (!fontsLoaded && !error) return null;
+  }, [fontsLoaded, FontError]);
+
+  if (!fontsLoaded && !FontError) return null;
+
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarShowLabel: false,
-        // Hide all tabs by default
-        // tabBarButton: () => null,
+    <TasksProvider>
+      <Tabs
+        screenOptions={{
+          tabBarShowLabel: false,
+          tabBarBackground: tabBarBackground,
+          tabBarStyle: {
+            borderTopWidth: 1,
+            borderTopColor: "#232533",
+            height: 70,
+          },
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                iconName="tasks"
+                focused={focused}
+                name="Tasks"
+              />
+            ),
+          }}
+        />
 
-        tabBarBackground: tabBarBackground,
-        tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: "#232533",
-          height: 70,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              iconName="tasks"
-              focused={focused}
-              name="Tasks"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="routines"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              iconName="habit"
-              focused={focused}
-              name="Routines"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="categories"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              iconName="category"
-              focused={focused}
-              name="Categories"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="timer"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              iconName="timer"
-              focused={focused}
-              name="Timer"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              iconName="account"
-              focused={focused}
-              name="Account"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="addTask"
-        options={{
-          header: () => <CustomHeader title="New Task" />,
-          tabBarButton: () => null,
-          tabBarStyle: { display: "none" }
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="routines"
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                iconName="habit"
+                focused={focused}
+                name="Routines"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="categories"
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                iconName="category"
+                focused={focused}
+                name="Categories"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="timer"
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                iconName="timer"
+                focused={focused}
+                name="Timer"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="account"
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                iconName="account"
+                focused={focused}
+                name="Account"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="addTask"
+          options={{
+            header: () => <CustomHeader title="New Task" />,
+            href: null,
+            tabBarStyle: { display: "none" }
+          }}
+        />
+      </Tabs>
+    </TasksProvider>
   );
 }
